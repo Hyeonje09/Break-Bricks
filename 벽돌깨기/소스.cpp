@@ -3,9 +3,6 @@
 #include <gl/glut.h> // (or others, depending on the system in use)
 #include <math.h>
 
-#pragma warning(disable:4996)
-#include <stdio.h>
-
 #define	width 			800
 #define	height			600
 #define	PI				3.1415
