@@ -2,6 +2,8 @@
 #include <gl/gl.h>
 #include <gl/glut.h> // (or others, depending on the system in use)
 #include <math.h>
+#include <stdio.h>
+#pragma warning(disable:4996)
 
 #define	width 			800
 #define	height			600
@@ -11,11 +13,11 @@
 int	left = 0, bottom = 0;
 int bar_width = 200, bar_height = 30;
 int bar_X = 350, bar_Y = 25;
-int bar_speed = 10;
+int bar_speed = 15;
 
 int	collision_count = 0;
 
-float radius1, moving_ball_radius;
+float moving_ball_radius;
 
 typedef struct _Point {
 	float	x;
@@ -26,14 +28,13 @@ Point moving_ball, velocity;
 
 
 void init(void) {
-	radius1 = 20.0;
 
 	moving_ball_radius = 10.0;
 	moving_ball.x = width / 2;
 	moving_ball.y = height / 4;
 
-	velocity.x = 0.0;
-	velocity.y = 0.1;
+	velocity.x = 0.05;
+	velocity.y = 0.05;
 
 	collision_count = 1;
 }
@@ -46,7 +47,7 @@ void MyReshape(int w, int h) {
 	gluOrtho2D(left, left + width, bottom, bottom + height); // 왼쪽 오른쪽 아래 위 벽 위치
 }
 
-void Modeling_Circle(float radius, Point CC) {
+void Modeling_Circle(float radius, Point CC) {	// 공 그리기
 	float	delta;
 
 	delta = 2 * PI / polygon_num;
@@ -56,7 +57,7 @@ void Modeling_Circle(float radius, Point CC) {
 	glEnd();
 }
 
-void Modeling_Bar(void) {
+void Modeling_Bar(void) {	// 공을 튕길 막대기 생성
 	glBegin(GL_QUADS);
 	glVertex2f(bar_X, bar_Y);
 	glVertex2f(bar_X, bar_Y + bar_height);
@@ -65,16 +66,30 @@ void Modeling_Bar(void) {
 	glEnd();
 }
 
-void Collision_Detection_to_Walls(void) {
-	if (bottom + height < (moving_ball.y + moving_ball_radius)) {
-		velocity.y = -0.05;
+void Collision_Detection_to_Walls(void) {	//공과 벽 충돌 함수
+	if (bottom + height < (moving_ball.y + moving_ball_radius)) {	//상단 충돌
+		velocity.y *= -1;
+	}
+	else if (left > (moving_ball.x + moving_ball_radius)) {	//왼쪽 충돌
+		velocity.x *= -1;
+	}
+
+	else if (left + width < (moving_ball.x + moving_ball_radius)) {	//오른쪽 충돌
+		velocity.x *= -1;
+	}
+
+	else if (bottom > (moving_ball.y + moving_ball_radius)) { //아래 충돌
+		moving_ball.x = width / 2;
+		moving_ball.y = height / 4;
+		//velocity.x = 0;
+		//velocity.y = 0;
 	}
 }
 
-void Collision_Detection_to_Bar(void) {
+void Collision_Detection_to_Bar(void) {		//공과 막대기 충돌 함수
 	if (moving_ball.x >= bar_X && moving_ball.x <= bar_X + bar_width) {
 		if ((bar_Y + bar_height) > (moving_ball.y - moving_ball_radius)) {
-			velocity.y = +0.05;
+			velocity.y *= -1;
 		}
 	}
 }
@@ -85,12 +100,12 @@ void RenderScene(void) {
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	// 충돌 처리 부분
-	Collision_Detection_to_Walls();			// 공과 벽의 충돌 함수
-	Collision_Detection_to_Bar();			// 공과 막대기 충돌 함수
+	Collision_Detection_to_Walls();		// 공과 벽 충돌 함수
+	Collision_Detection_to_Bar();		// 공과 막대기 충돌 함수
 
 	// 움직이는 공의 위치 변화 
-	moving_ball.x += velocity.x;	//움직이는 공의 x좌표
-	moving_ball.y += velocity.y;	//움직이는 공의 y좌표
+	moving_ball.x += velocity.x;	// 움직이는 공의 x좌표
+	moving_ball.y += velocity.y;	// 움직이는 공의 y좌표
 
 	// 움직이는 공 그리기 
 	glColor3f(0.0, 0.0, 1.0);
