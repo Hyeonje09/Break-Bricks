@@ -1,19 +1,23 @@
 #include <windows.h>
 #include <gl/gl.h>
-#include <gl/glut.h> // (or others, depending on the system in use)
+#include <gl/glut.h>
 #include <math.h>
+#include <stdlib.h>
+#include <time.h>
 #include <stdio.h>
 #pragma warning(disable:4996)
 
 #define	width 			800
 #define	height			600
-#define	PI				3.1415
+#define PI				3.1415
 #define	polygon_num		50
 
 int	left = 0, bottom = 0;
 int bar_width = 200, bar_height = 30;
 int bar_X = 350, bar_Y = 25;
 int bar_speed = 15;
+
+int brickWidth = 50, brickHeight = 40;
 
 int	collision_count = 0;
 
@@ -28,13 +32,12 @@ Point moving_ball, velocity;
 
 
 void init(void) {
-
 	moving_ball_radius = 10.0;
 	moving_ball.x = width / 2;
 	moving_ball.y = height / 4;
 
-	velocity.x = 0.05;
-	velocity.y = 0.05;
+	velocity.x = 0;
+	velocity.y = 0;
 
 	collision_count = 1;
 }
@@ -81,8 +84,8 @@ void Collision_Detection_to_Walls(void) {	//공과 벽 충돌 함수
 	else if (bottom > (moving_ball.y + moving_ball_radius)) { //아래 충돌
 		moving_ball.x = width / 2;
 		moving_ball.y = height / 4;
-		//velocity.x = 0;
-		//velocity.y = 0;
+		velocity.x = 0;
+		velocity.y = 0;
 	}
 }
 
@@ -94,9 +97,24 @@ void Collision_Detection_to_Bar(void) {		//공과 막대기 충돌 함수
 	}
 }
 
-void RenderScene(void) {
+void draw_bricks(void) {
+	srand(time(NULL));
+	for (int i = 0; i < 3; i+=2) {
+		for (int j = 0; j < 16; j+=2) {
+			glColor3f((rand() % 10 / 10.0), (rand() % 10 / 10.0), (rand() % 10 / 10.0));
 
-	glClearColor(1.0, 1.0, 0.0, 0.0); // Set display-window color to Yellow
+			glBegin(GL_POLYGON);
+			glVertex2i(j * brickWidth, height - i * brickHeight);
+			glVertex2i(j * brickWidth, height - (i + 1) * brickHeight);
+			glVertex2i((j + 1) * brickWidth, height - (i + 1) * brickHeight);
+			glVertex2i((j + 1) * brickWidth, height - i * brickHeight);
+			glEnd();
+		}
+	}
+}
+
+void RenderScene(void) {
+	glClearColor(0.0, 1.0, 0.0, 0.0); // Set display-window color to Yellow
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	// 충돌 처리 부분
@@ -112,8 +130,11 @@ void RenderScene(void) {
 	Modeling_Circle(moving_ball_radius, moving_ball);
 
 	// 움직이는 막대기 그리기
-	glColor3f(1.0, 0.0, 1.0);
+	glColor3f(1, 0.647059, 0);
 	Modeling_Bar();
+
+	//벽돌 그리기
+	draw_bricks();
 
 	glutSwapBuffers();
 	glFlush();
@@ -130,6 +151,11 @@ void myKey(int key, int x, int y) {
 		if (0 <= (bar_X - bar_speed)) {
 			bar_X -= bar_speed;
 		}
+	}
+
+	else if (key == GLUT_KEY_F1) {
+		velocity.x = 0.07;
+		velocity.y = 0.07;
 	}
 	glutPostRedisplay();
 }
