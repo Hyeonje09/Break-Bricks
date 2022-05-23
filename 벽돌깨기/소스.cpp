@@ -42,7 +42,6 @@ void init(void) {
 	collision_count = 1;
 }
 
-
 void MyReshape(int w, int h) {
 	glViewport(0, 0, w, h);
 	glMatrixMode(GL_PROJECTION);
@@ -60,13 +59,29 @@ void Modeling_Circle(float radius, Point CC) {	// 공 그리기
 	glEnd();
 }
 
-void Modeling_Bar(void) {	// 공을 튕길 막대기 생성
+void Modeling_Bar(void) {	// 공을 튕길 막대기 그리기
 	glBegin(GL_QUADS);
 	glVertex2f(bar_X, bar_Y);
 	glVertex2f(bar_X, bar_Y + bar_height);
 	glVertex2f(bar_X + bar_width, bar_Y + bar_height);
 	glVertex2f(bar_X + bar_width, bar_Y);
 	glEnd();
+}
+
+void draw_bricks(void) {	// 벽돌 그리기
+	srand(time(NULL));
+	for (int i = 0; i < 3; i += 2) {
+		for (int j = 0; j < 16; j += 2) {
+			glColor3f((rand() % 10 / 10.0), (rand() % 10 / 10.0), (rand() % 10 / 10.0));
+
+			glBegin(GL_POLYGON);
+			glVertex2i(j * brickWidth, height - i * brickHeight);
+			glVertex2i(j * brickWidth, height - (i + 1) * brickHeight);
+			glVertex2i((j + 1) * brickWidth, height - (i + 1) * brickHeight);
+			glVertex2i((j + 1) * brickWidth, height - i * brickHeight);
+			glEnd();
+		}
+	}
 }
 
 void Collision_Detection_to_Walls(void) {	//공과 벽 충돌 함수
@@ -97,18 +112,14 @@ void Collision_Detection_to_Bar(void) {		//공과 막대기 충돌 함수
 	}
 }
 
-void draw_bricks(void) {
-	srand(time(NULL));
-	for (int i = 0; i < 3; i+=2) {
-		for (int j = 0; j < 16; j+=2) {
-			glColor3f((rand() % 10 / 10.0), (rand() % 10 / 10.0), (rand() % 10 / 10.0));
-
-			glBegin(GL_POLYGON);
-			glVertex2i(j * brickWidth, height - i * brickHeight);
-			glVertex2i(j * brickWidth, height - (i + 1) * brickHeight);
-			glVertex2i((j + 1) * brickWidth, height - (i + 1) * brickHeight);
-			glVertex2i((j + 1) * brickWidth, height - i * brickHeight);
-			glEnd();
+void Collision_Detection_to_Bricks(void) {
+	for (int i = 0; i < 3; i += 2) {
+		for (int j = 0; j < 16; j += 2) {
+			if (moving_ball.x > brickWidth * j && moving_ball.x <= brickWidth * (j + 1)) {
+				if (moving_ball.y + moving_ball_radius < height - (brickHeight * (i + 1))) {
+					velocity.y *= -1;
+				}
+			}
 		}
 	}
 }
@@ -120,6 +131,7 @@ void RenderScene(void) {
 	// 충돌 처리 부분
 	Collision_Detection_to_Walls();		// 공과 벽 충돌 함수
 	Collision_Detection_to_Bar();		// 공과 막대기 충돌 함수
+	Collision_Detection_to_Bricks();	// 공과 벽돌 충돓 함수
 
 	// 움직이는 공의 위치 변화 
 	moving_ball.x += velocity.x;	// 움직이는 공의 x좌표
