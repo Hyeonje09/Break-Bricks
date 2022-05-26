@@ -15,11 +15,11 @@
 int	left = 0, bottom = 0;
 int bar_width = 200, bar_height = 30;
 int bar_X = 350, bar_Y = 25;
-int bar_speed = 15;
+int bar_speed = 20;
 
 int brickWidth = 50, brickHeight = 40;
 
-int	collision_count = 0;
+int	collision_count[100];
 
 float moving_ball_radius;
 
@@ -38,8 +38,6 @@ void init(void) {
 
 	velocity.x = 0;
 	velocity.y = 0;
-
-	collision_count = 1;
 }
 
 void MyReshape(int w, int h) {
@@ -69,21 +67,31 @@ void Modeling_Bar(void) {	// 공을 튕길 막대기 그리기
 }
 
 void draw_bricks(void) {	// 벽돌 그리기
-	srand(time(NULL));
-	for (int i = 0; i < 3; i += 2) {
-		for (int j = 0; j < 16; j += 2) {
-			glColor3f((rand() % 10 / 10.0), (rand() % 10 / 10.0), (rand() % 10 / 10.0));
+	int determination = 0;
+	for (int y = 0; y < 3; y++) {
+		for (int x = 0; x < 16; x++) {
+			if (collision_count[determination] == 0) {
+				glBegin(GL_POLYGON);
+				glColor3f(0.65, 0.0, 0.0);
+				glVertex2d(x * brickWidth, height - (y * brickHeight));
+				glVertex2d(x * brickWidth, height - ((y + 1) * brickHeight));
+				glVertex2d((x + 1) * brickWidth, height - ((y + 1) * brickHeight));
+				glVertex2d((x + 1) * brickWidth, height - (y * brickHeight));
+				glEnd();
 
-			glBegin(GL_POLYGON);
-			glVertex2i(j * brickWidth, height - i * brickHeight);
-			glVertex2i(j * brickWidth, height - (i + 1) * brickHeight);
-			glVertex2i((j + 1) * brickWidth, height - (i + 1) * brickHeight);
-			glVertex2i((j + 1) * brickWidth, height - i * brickHeight);
-			glEnd();
+				glLineWidth(5.0);
+				glBegin(GL_LINE_LOOP);
+				glColor3f(0.0, 1.0, 0.0);
+				glVertex2d(x * brickWidth, height - (y * brickHeight));
+				glVertex2d(x * brickWidth, height - ((y + 1) * brickHeight));
+				glVertex2d((x + 1) * brickWidth, height - ((y + 1) * brickHeight));
+				glVertex2d((x + 1) * brickWidth, height - (y * brickHeight));
+				glEnd();
+			}
+			determination++;
 		}
 	}
 }
-
 void Collision_Detection_to_Walls(void) {	//공과 벽 충돌 함수
 	if (bottom + height < (moving_ball.y + moving_ball_radius)) {	//상단 충돌
 		velocity.y *= -1;
@@ -96,7 +104,7 @@ void Collision_Detection_to_Walls(void) {	//공과 벽 충돌 함수
 		velocity.x *= -1;
 	}
 
-	else if (bottom > (moving_ball.y + moving_ball_radius)) { //아래 충돌
+	else if (bottom > (moving_ball.y + moving_ball_radius)) { //하단 충돌
 		moving_ball.x = width / 2;
 		moving_ball.y = height / 4;
 		velocity.x = 0;
@@ -107,31 +115,56 @@ void Collision_Detection_to_Walls(void) {	//공과 벽 충돌 함수
 void Collision_Detection_to_Bar(void) {		//공과 막대기 충돌 함수
 	if (moving_ball.x >= bar_X && moving_ball.x <= bar_X + bar_width) {
 		if ((bar_Y + bar_height) > (moving_ball.y - moving_ball_radius)) {
+			if (moving_ball.x > bar_X + (bar_width / 2) && velocity.x < 0) { //상단 충돌
+				velocity.x *= -1;
+			}
 			velocity.y *= -1;
 		}
 	}
 }
 
-void Collision_Detection_to_Bricks(void) {
-	for (int i = 0; i < 3; i += 2) {
-		for (int j = 0; j < 16; j += 2) {
-			if (moving_ball.x > brickWidth * j && moving_ball.x <= brickWidth * (j + 1)) {
-				if (moving_ball.y + moving_ball_radius < height - (brickHeight * (i + 1))) {
+void Collision_Detection_to_Bricks(void) {	//공과 벽돌 충돌 함수
+	int determination = 0;
+	for (int y = 0; y < 3; y++) {
+		for (int x = 0; x < 16; x++) {
+			if (collision_count[determination] == 1) {
+				determination++;
+				continue;
+			}
+			if (moving_ball.x > (brickWidth * x) && moving_ball.x < (brickWidth * (x + 1))) {
+				if ((moving_ball.y - moving_ball_radius) > height - (brickHeight * y)) {	//위
 					velocity.y *= -1;
+					collision_count[determination] = 1;
+				}
+				if ((moving_ball.y + moving_ball_radius) > height - (brickHeight * (y + 1))) { //	아래
+					velocity.y *= -1;
+					collision_count[determination] = 1;
 				}
 			}
+
+			/*else if (moving_ball.y < height - (brickHeight * y) && moving_ball.y > height - (brickHeight * (y + 1))) {
+				if ((moving_ball.x + moving_ball_radius) > brickWidth * x) {	//왼쪽
+					velocity.x *= -1;
+					collision_count[determination] = 1;
+				}
+				if ((moving_ball.x + moving_ball_radius) < brickWidth * (x+1)) {	//왼쪽
+					velocity.x *= -1;
+					collision_count[determination] = 1;
+				}
+			}*/
+			determination++;
 		}
 	}
 }
 
 void RenderScene(void) {
-	glClearColor(0.0, 1.0, 0.0, 0.0); // Set display-window color to Yellow
+	glClearColor(0.0, 1.0, 0.0, 0.0);
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	// 충돌 처리 부분
 	Collision_Detection_to_Walls();		// 공과 벽 충돌 함수
 	Collision_Detection_to_Bar();		// 공과 막대기 충돌 함수
-	Collision_Detection_to_Bricks();	// 공과 벽돌 충돓 함수
+	Collision_Detection_to_Bricks();
 
 	// 움직이는 공의 위치 변화 
 	moving_ball.x += velocity.x;	// 움직이는 공의 x좌표
