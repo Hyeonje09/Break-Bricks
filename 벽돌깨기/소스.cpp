@@ -21,7 +21,7 @@ int bar_speed = 20;
 
 // brick 설정 변수
 int brickWidth = 50, brickHeight = 40;
-int percent, chk;
+int buff, debuff, buff_chk, debuff_chk;
 
 // 충돌 판정 배열
 int	collision_count[100];
@@ -72,7 +72,8 @@ void Modeling_Bar(void) {	// 공을 튕길 막대기 그리기
 }
 
 void myTimer(int value) {	// 버프 시간
-	bar_width += 200;
+	bar_width -= 200;
+	buff_chk = 0;
 }
 
 void draw_bricks(void) {	// 벽돌 그리기
@@ -82,14 +83,16 @@ void draw_bricks(void) {	// 벽돌 그리기
 		for (int x = 0; x < 16; x++) {
 			if (collision_count[determination] == 0) {	// 충돌 판정이 없을 경우 그리기
 				glBegin(GL_POLYGON);
-				percent = rand() % 100;
-				if (percent > 5) {
-					chk = 0;
-					glColor3f(0.65, 0, 0);
-				}
-				else {
-					chk = 1;
+				buff = rand() % 100;
+				debuff = rand() % 100;
+				glColor3f(0.65, 0, 0);
+				if(buff < 5) {
+					buff_chk = 1;
 					glColor3f(1, 1, 1);
+				}
+				if (debuff < 5) {
+					debuff_chk = 1;
+					glColor3f(0, 0, 0);
 				}
 				glVertex2d(x * brickWidth, height - (y * brickHeight));
 				glVertex2d(x * brickWidth, height - ((y + 1) * brickHeight));
@@ -177,9 +180,10 @@ void Collision_Detection_to_Bricks(void) {	//공과 벽돌 충돌 함수
 					printf("벽돌 아래쪽충돌\n");
 					velocity.y *= -1;
 					collision_count[determination] = 1;
-					if (chk == 1) {
+					if (buff_chk == 1) {
 						printf("하얀 벽돌 충돌\n");
-						glutTimerFunc(30, myTimer, 1);
+						bar_width += 200;
+						glutTimerFunc(5000, myTimer, 1); // 5초 후에 myTimer 호출
 					}
 				}
 			}
