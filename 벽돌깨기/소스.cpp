@@ -13,14 +13,19 @@
 #define	polygon_num		50
 
 int	left = 0, bottom = 0;
+
+// bar 설정 변수
 int bar_width = 200, bar_height = 30;
 int bar_X = 350, bar_Y = 25;
 int bar_speed = 20;
 
+// brick 설정 변수
 int brickWidth = 50, brickHeight = 40;
 
+// 충돌 판정 배열
 int	collision_count[100];
 
+// ball 반지름
 float moving_ball_radius;
 
 typedef struct _Point {
@@ -29,7 +34,6 @@ typedef struct _Point {
 } Point;
 
 Point moving_ball, velocity;
-
 
 void init(void) {
 	moving_ball_radius = 10.0;
@@ -70,7 +74,7 @@ void draw_bricks(void) {	// 벽돌 그리기
 	int determination = 0;
 	for (int y = 0; y < 3; y++) {
 		for (int x = 0; x < 16; x++) {
-			if (collision_count[determination] == 0) {
+			if (collision_count[determination] == 0) {	// 충돌 판정이 없을 경우 그리기
 				glBegin(GL_POLYGON);
 				glColor3f(0.65, 0.0, 0.0);
 				glVertex2d(x * brickWidth, height - (y * brickHeight));
@@ -94,17 +98,21 @@ void draw_bricks(void) {	// 벽돌 그리기
 }
 void Collision_Detection_to_Walls(void) {	//공과 벽 충돌 함수
 	if (bottom + height < (moving_ball.y + moving_ball_radius)) {	//상단 충돌
+		//printf("벽 상단충돌\n");
 		velocity.y *= -1;
 	}
 	else if (left > (moving_ball.x + moving_ball_radius)) {	//왼쪽 충돌
+		//printf("벽 왼쪽충돌\n");
 		velocity.x *= -1;
 	}
 
 	else if (left + width < (moving_ball.x + moving_ball_radius)) {	//오른쪽 충돌
+		//printf("벽 오른쪽충돌\n");
 		velocity.x *= -1;
 	}
 
-	else if (bottom > (moving_ball.y + moving_ball_radius)) { //하단 충돌
+	else if (bottom > (moving_ball.y + moving_ball_radius)) { //하단 충돌 : 초기값으로 지정
+		//printf("벽 하단충돌\n");
 		moving_ball.x = width / 2;
 		moving_ball.y = height / 4;
 		velocity.x = 0;
@@ -114,11 +122,24 @@ void Collision_Detection_to_Walls(void) {	//공과 벽 충돌 함수
 
 void Collision_Detection_to_Bar(void) {		//공과 막대기 충돌 함수
 	if (moving_ball.x >= bar_X && moving_ball.x <= bar_X + bar_width) {
-		if ((bar_Y + bar_height) > (moving_ball.y - moving_ball_radius)) {
-			if (moving_ball.x > bar_X + (bar_width / 2) && velocity.x < 0) { //상단 충돌
+		if ((bar_Y + bar_height) > (moving_ball.y - moving_ball_radius)) {	//상단 충돌
+			//printf("바 상단충돌\n");
+			if (moving_ball.x > bar_X + (bar_width / 2) && velocity.x < 0) {
+			//	printf("바 오른쪽 상단충돌\n");
 				velocity.x *= -1;
 			}
 			velocity.y *= -1;
+		}
+	}
+
+	if (moving_ball.y > bar_Y && moving_ball.y <= bar_Y + bar_height) {
+		if ((bar_X + bar_width) > (moving_ball.x + moving_ball_radius)) {	// 우측 충돌
+		//	printf("바 오른쪽충돌\n");
+			velocity.x *= -1;
+		}
+		if (bar_X > (moving_ball.x + moving_ball_radius)) {	// 좌측 충돌 
+		//	printf("바 왼쪽충돌\n");
+			velocity.x *= -1;
 		}
 	}
 }
@@ -127,31 +148,22 @@ void Collision_Detection_to_Bricks(void) {	//공과 벽돌 충돌 함수
 	int determination = 0;
 	for (int y = 0; y < 3; y++) {
 		for (int x = 0; x < 16; x++) {
-			if (collision_count[determination] == 1) {
+			if (collision_count[determination] == 1) {	// 충돌 판정이 났을 경우 다음을 실행하지 않는다.
 				determination++;
 				continue;
 			}
 			if (moving_ball.x > (brickWidth * x) && moving_ball.x < (brickWidth * (x + 1))) {
 				if ((moving_ball.y - moving_ball_radius) > height - (brickHeight * y)) {	//위
+					printf("벽돌 위쪽충돌\n");
 					velocity.y *= -1;
 					collision_count[determination] = 1;
 				}
 				if ((moving_ball.y + moving_ball_radius) > height - (brickHeight * (y + 1))) { //	아래
+					printf("벽돌 아래쪽충돌\n");
 					velocity.y *= -1;
 					collision_count[determination] = 1;
 				}
 			}
-
-			/*else if (moving_ball.y < height - (brickHeight * y) && moving_ball.y > height - (brickHeight * (y + 1))) {
-				if ((moving_ball.x + moving_ball_radius) > brickWidth * x) {	//왼쪽
-					velocity.x *= -1;
-					collision_count[determination] = 1;
-				}
-				if ((moving_ball.x + moving_ball_radius) < brickWidth * (x+1)) {	//왼쪽
-					velocity.x *= -1;
-					collision_count[determination] = 1;
-				}
-			}*/
 			determination++;
 		}
 	}
