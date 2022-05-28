@@ -71,6 +71,10 @@ void Modeling_Bar(void) {	// 공을 튕길 막대기 그리기
 	glEnd();
 }
 
+void myTimer(int value) {	// 버프 시간
+	bar_width += 200;
+}
+
 void draw_bricks(void) {	// 벽돌 그리기
 	srand(time(NULL));
 	int determination = 0;
@@ -164,15 +168,19 @@ void Collision_Detection_to_Bricks(void) {	//공과 벽돌 충돌 함수
 				continue;
 			}
 			if (moving_ball.x > (brickWidth * x) && moving_ball.x < (brickWidth * (x + 1))) {
-				if ((moving_ball.y - moving_ball_radius) > height - (brickHeight * y)) {	//위
+				/*if ((moving_ball.y - moving_ball_radius) > height - (brickHeight * y)) {	//위
 					printf("벽돌 위쪽충돌\n");
 					velocity.y *= -1;
 					collision_count[determination] = 1;
-				}
+				}*/
 				if ((moving_ball.y + moving_ball_radius) > height - (brickHeight * (y + 1))) { //	아래
 					printf("벽돌 아래쪽충돌\n");
 					velocity.y *= -1;
 					collision_count[determination] = 1;
+					if (chk == 1) {
+						printf("하얀 벽돌 충돌\n");
+						glutTimerFunc(30, myTimer, 1);
+					}
 				}
 			}
 			determination++;
