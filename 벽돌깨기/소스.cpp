@@ -21,6 +21,7 @@ int bar_speed = 20;
 
 // brick 설정 변수
 int brickWidth = 50, brickHeight = 40;
+int percent, chk;
 
 // 충돌 판정 배열
 int	collision_count[100];
@@ -71,12 +72,21 @@ void Modeling_Bar(void) {	// 공을 튕길 막대기 그리기
 }
 
 void draw_bricks(void) {	// 벽돌 그리기
+	srand(time(NULL));
 	int determination = 0;
 	for (int y = 0; y < 3; y++) {
 		for (int x = 0; x < 16; x++) {
 			if (collision_count[determination] == 0) {	// 충돌 판정이 없을 경우 그리기
 				glBegin(GL_POLYGON);
-				glColor3f(0.65, 0.0, 0.0);
+				percent = rand() % 100;
+				if (percent > 5) {
+					chk = 0;
+					glColor3f(0.65, 0, 0);
+				}
+				else {
+					chk = 1;
+					glColor3f(1, 1, 1);
+				}
 				glVertex2d(x * brickWidth, height - (y * brickHeight));
 				glVertex2d(x * brickWidth, height - ((y + 1) * brickHeight));
 				glVertex2d((x + 1) * brickWidth, height - ((y + 1) * brickHeight));
@@ -92,6 +102,7 @@ void draw_bricks(void) {	// 벽돌 그리기
 				glVertex2d((x + 1) * brickWidth, height - (y * brickHeight));
 				glEnd();
 			}
+
 			determination++;
 		}
 	}
@@ -230,3 +241,16 @@ void main(int argc, char** argv) {
 	glutSpecialFunc(myKey);
 	glutMainLoop();
 }
+
+/*
+
+if( 특정 색깔의 벽돌 or 맵에 생성되는 아이템을 먹었을 경우) 
+	1. 디버프
+	- 맵 중앙에서 x축 방향으로만 이동하는 장애물 벽 생성.
+	- 공의 위력 1/2로 감소 : 만약 한 번 충돌 판정이 났을 경우 깨지지 않음.
+
+	2. 버프 
+	- 하단바의 크기가 늘어남 or 랜덤으로 벽돌 몇 개가 사라짐.
+	- 공의 위력 2배 증가 : 충돌 판정 난 벽돌의 양옆 벽돌이 같이 깨짐
+
+*/
