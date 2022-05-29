@@ -1,3 +1,4 @@
+#pragma warning(disable:4996)
 #include <windows.h>
 #include <gl/gl.h>
 #include <gl/glut.h>
@@ -7,7 +8,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#pragma warning(disable:4996)
 
 #define gameWidth		1000
 #define gameHeight		600
@@ -21,7 +21,6 @@ int	left = 0, bottom = 0;
 
 // bar 설정 변수
 int bar_width = 200, bar_height = 30;
-int bar_X = 350, bar_Y = 25;
 int bar_speed = 20;
 
 // brick 설정 변수
@@ -42,7 +41,7 @@ typedef struct _Point {
 	float	y;
 } Point;
 
-Point moving_ball, velocity;
+Point moving_ball, velocity, bar;
 
 void init(void) {
 	moving_ball_radius = 10.0;
@@ -51,8 +50,10 @@ void init(void) {
 
 	velocity.x = 0;
 	velocity.y = 0;
-}
 
+	bar.x = 350;
+	bar.y = 25;
+}
 
 void drawBitmapText(char* str, float x, float y) {
 	int len = strlen(str);
@@ -96,10 +97,10 @@ void Modeling_Circle(float radius, Point CC) {	// 공 그리기
 
 void Modeling_Bar(void) {	// 공을 튕길 막대기 그리기
 	glBegin(GL_QUADS);
-	glVertex2f(bar_X, bar_Y);
-	glVertex2f(bar_X, bar_Y + bar_height);
-	glVertex2f(bar_X + bar_width, bar_Y + bar_height);
-	glVertex2f(bar_X + bar_width, bar_Y);
+	glVertex2f(bar.x, bar.y);
+	glVertex2f(bar.x, bar.y + bar_height);
+	glVertex2f(bar.x + bar_width, bar.y + bar_height);
+	glVertex2f(bar.x + bar_width, bar.y);
 	glEnd();
 }
 
@@ -169,10 +170,10 @@ void Collision_Detection_to_Walls(void) {	//공과 벽 충돌 함수
 }
 
 void Collision_Detection_to_Bar(void) {		//공과 막대기 충돌 함수
-	if (moving_ball.x >= bar_X && moving_ball.x <= bar_X + bar_width) {
-		if ((bar_Y + bar_height) > (moving_ball.y - moving_ball_radius)) {	//상단 충돌
+	if (moving_ball.x >= bar.x && moving_ball.x <= bar.x + bar_width) {
+		if ((bar.y + bar_height) > (moving_ball.y - moving_ball_radius)) {	//상단 충돌
 			//printf("바 상단충돌\n");
-			if (moving_ball.x > bar_X + (bar_width / 2) && velocity.x < 0) {
+			if (moving_ball.x > bar.x + (bar_width / 2) && velocity.x < 0) {
 				//	printf("바 오른쪽 상단충돌\n");
 				velocity.x *= -1;
 			}
@@ -180,12 +181,12 @@ void Collision_Detection_to_Bar(void) {		//공과 막대기 충돌 함수
 		}
 	}
 
-	if (moving_ball.y > bar_Y && moving_ball.y <= bar_Y + bar_height) {
-		if ((bar_X + bar_width) > (moving_ball.x + moving_ball_radius)) {	// 우측 충돌
+	if (moving_ball.y > bar.y  && moving_ball.y <= bar.y + bar_height) {
+		if ((bar.x + bar_width) > (moving_ball.x + moving_ball_radius)) {	// 우측 충돌
 		//	printf("바 오른쪽충돌\n");
 			velocity.x *= -1;
 		}
-		if (bar_X > (moving_ball.x + moving_ball_radius)) {	// 좌측 충돌 
+		if (bar.x > (moving_ball.x + moving_ball_radius)) {	// 좌측 충돌 
 		//	printf("바 왼쪽충돌\n");
 			velocity.x *= -1;
 		}
@@ -255,20 +256,27 @@ void RenderScene(void) {
 
 void myKey(int key, int x, int y) {
 	if (key == GLUT_KEY_RIGHT) {
-		if ((width - bar_width) >= (bar_X + bar_speed)) {
-			bar_X += bar_speed;
+		if ((width - bar_width) >= (bar.x + bar_speed)) {
+			bar.x += bar_speed;
 		}
 	}
 
 	else if (key == GLUT_KEY_LEFT) {
-		if (0 <= (bar_X - bar_speed)) {
-			bar_X -= bar_speed;
+		if (0 <= (bar.x - bar_speed)) {
+			bar.x -= bar_speed;
 		}
 	}
 
 	else if (key == GLUT_KEY_F1) {
-		velocity.x = 0.07;
-		velocity.y = 0.07;
+		int random = rand() % 100;
+		if (random % 2 == 0) {
+			velocity.x = 0.07;
+			velocity.y = 0.07;
+		}
+		else {
+			velocity.x = -0.07;
+			velocity.y = 0.07;
+		}
 	}
 	glutPostRedisplay();
 }
