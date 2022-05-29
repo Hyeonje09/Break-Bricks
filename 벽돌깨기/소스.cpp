@@ -5,7 +5,12 @@
 #include <stdlib.h>
 #include <time.h>
 #include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 #pragma warning(disable:4996)
+
+#define gameWidth		1000
+#define gameHeight		600
 
 #define	width 			800
 #define	height			600
@@ -29,6 +34,9 @@ int	collision_count[100];
 // ball 반지름
 float moving_ball_radius;
 
+// 점수
+int score = 0;
+
 typedef struct _Point {
 	float	x;
 	float	y;
@@ -45,11 +53,35 @@ void init(void) {
 	velocity.y = 0;
 }
 
+
+void drawBitmapText(char* str, float x, float y) {
+	int len = strlen(str);
+	glColor3f(1, 1, 1);
+	glRasterPos2f(x, y);
+	for(int i=0;i<len;i++){
+		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, str[i]);
+	}
+}
+
+void scoreboard(void) {
+	glColor3d(0, 0, 0);
+	glBegin(GL_POLYGON);
+	glVertex2f(width + 3, 0);
+	glVertex2f(width + gameWidth, 0);
+	glVertex2f(width + gameWidth, height);
+	glVertex2f(width, height);
+	glEnd();
+	
+	char str[] = "Score";
+	drawBitmapText(str, width + 70, height-50);
+	drawBitmapText(itoa(score, str, 10), width + 82, height - 72);
+}
+
 void MyReshape(int w, int h) {
 	glViewport(0, 0, w, h);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluOrtho2D(left, left + width, bottom, bottom + height); // 왼쪽 오른쪽 아래 위 벽 위치
+	gluOrtho2D(left, left + gameWidth, bottom, bottom + gameHeight); // 왼쪽 오른쪽 아래 위 벽 위치
 }
 
 void Modeling_Circle(float radius, Point CC) {	// 공 그리기
@@ -75,7 +107,7 @@ void buff_Timer(int value) {	// 버프 시간
 	bar_width -= 100;
 	chk = 0;
 }
-	
+
 void draw_bricks(void) {	// 벽돌 그리기
 	srand(time(NULL));
 	int determination = 0;
@@ -175,6 +207,7 @@ void Collision_Detection_to_Bricks(void) {	//공과 벽돌 충돌 함수
 					collision_count[determination] = 1;
 				}*/
 				if ((moving_ball.y + moving_ball_radius) > height - (brickHeight * (y + 1))) { //	아래
+					score++;
 					printf("벽돌 아래쪽충돌\n");
 					velocity.y *= -1;
 					collision_count[determination] = 1;
@@ -193,6 +226,8 @@ void Collision_Detection_to_Bricks(void) {	//공과 벽돌 충돌 함수
 void RenderScene(void) {
 	glClearColor(0.0, 1.0, 0.0, 0.0);
 	glClear(GL_COLOR_BUFFER_BIT);
+
+	scoreboard();	//스코어보드
 
 	// 충돌 처리 부분
 	Collision_Detection_to_Walls();		// 공과 벽 충돌 함수
@@ -242,7 +277,7 @@ void main(int argc, char** argv) {
 	glutInit(&argc, argv);
 	glutInitWindowPosition(100, 100);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
-	glutInitWindowSize(width, height);
+	glutInitWindowSize(gameWidth, gameHeight);
 	glutCreateWindow("Break Bricks");
 	init();
 	glutReshapeFunc(MyReshape);
@@ -251,13 +286,3 @@ void main(int argc, char** argv) {
 	glutSpecialFunc(myKey);
 	glutMainLoop();
 }
-
-/*
-if( 특정 색깔의 벽돌 or 맵에 생성되는 아이템을 먹었을 경우)
-	1. 디버프
-	- 맵 중앙에서 x축 방향으로만 이동하는 장애물 벽 생성.
-	- 공의 위력 1/2로 감소 : 만약 한 번 충돌 판정이 났을 경우 깨지지 않음.
-	2. 버프
-	- 하단바의 크기가 늘어남 or 랜덤으로 벽돌 몇 개가 사라짐.
-	- 공의 위력 2배 증가 : 충돌 판정 난 벽돌의 양옆 벽돌이 같이 깨짐
-*/
